@@ -1,4 +1,5 @@
-﻿namespace TicTacToe.Core
+﻿
+namespace TicTacToe.Core
 {
      /// <summary>
      /// A Tic-Tac-Toe player can either be noughts or crosses.
