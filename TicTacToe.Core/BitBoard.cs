@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Numerics;
-using System.Threading.Tasks;
-using System.Runtime.Intrinsics.X86;
+﻿using System.Numerics;
+
 
 namespace TicTacToe.Core
 {
@@ -43,7 +38,6 @@ namespace TicTacToe.Core
             //   11111111111111111111111 000 000 000 = 4294966784
             // this is the same as zero for our purposes, where
             // we are using the first few bits.
-
             if (_value == 4294966784) _value = 0;
         }
 

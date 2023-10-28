@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,6 +10,8 @@ namespace TicTacToe.Core
 {
     public class Board
     {
+        public static UInt16 FULL_BOARD = 511;
+
         BitBoard _naughts;
         BitBoard _crosses;
         Player _player1;
@@ -25,6 +28,54 @@ namespace TicTacToe.Core
         public Board() : this(new BitBoard(), new BitBoard(), Player.Naughts, Player.Crosses)
         {
 
+        }
+
+        public Board MakeMove(Square s)
+        {
+            if (_player1 == Player.Naughts)
+            {
+                var update = _naughts;
+                update.SetBit(s);
+                return new Board(update, _crosses, Player.Crosses, Player.Naughts);
+            }
+            else
+            {
+                var update = _crosses;
+                update.SetBit(s);
+                return new Board(_naughts, update, Player.Naughts, Player.Crosses);
+            }
+        }
+
+        public bool IsFull()
+        {
+            if ((_naughts.GetValue() | _crosses.GetValue()) == FULL_BOARD)
+                return true;
+
+            return false;
+        }
+        public bool IsTerminalState()
+        {
+            if ( HasWon(_player1) || HasWon(_player2) ) return true;
+            if ( IsFull() ) return true;
+            
+            return false;
+        }
+
+        public bool HasWon(Player player)
+        {
+            uint side = player == Player.Naughts ? _naughts.GetValue() : _crosses.GetValue();
+            var masks = Enum.GetValues(typeof(Mask));
+  
+            foreach (Mask mask in masks)
+            {
+                UInt16 maskValue = Convert.ToUInt16(mask);
+                if ((side & maskValue) == maskValue)
+                {
+                    return true;
+                }
+            }
+            
+            return false;
         }
 
         public List<Square> GetMoves()
