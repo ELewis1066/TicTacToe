@@ -7,14 +7,21 @@ namespace TicTacToe.Core
     {
         private uint _value;
 
-        public BitBoard(uint value) 
+        public BitBoard(uint value)
         {
-            _value = value;
+            SetValue(value);
         }
         public BitBoard() : this(0)
         {
         }
 
+        private void SetValue(uint value)
+        {
+            // 11111111111111111111111 000 000 000 = 4294966784
+            // this is the same as zero for our purposes, where
+            // we are using the first few bits.
+            _value = value == 4294966784 ? (uint) 0 : value;
+        }
         public uint GetValue()
         {
             // see: { get; } or  {get; set;} for shorthand version of this.
@@ -33,12 +40,8 @@ namespace TicTacToe.Core
 
         public void PopBit(Square square)
         {
-            _value &= ~uint.RotateLeft(1, Convert.ToUInt16(square));
-            // Pop bit can create a number:
-            //   11111111111111111111111 000 000 000 = 4294966784
-            // this is the same as zero for our purposes, where
-            // we are using the first few bits.
-            if (_value == 4294966784) _value = 0;
+            var popped = _value  & ~uint.RotateLeft(1, Convert.ToUInt16(square));
+            SetValue(popped);
         }
 
        public Square IndexLSB()
@@ -48,7 +51,7 @@ namespace TicTacToe.Core
         }
 
 
-        public bool isEmpty()
+        public bool IsEmpty()
         {
             return _value == 0;
         }
