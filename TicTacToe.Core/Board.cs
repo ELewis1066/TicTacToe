@@ -23,17 +23,24 @@ namespace TicTacToe.Core
 
         }
 
+        public bool IsSquareEmpty(Square square)
+        {
+            if ( _naughts.GetBit(square) == 0 && _crosses.GetBit(square) ==0)
+                return true;
+            return false;
+        }
+
         public Board MakeMove(Square s)
         {
             if (Player1 == Player.Naughts)
             {
-                var update = _naughts;
+                var update = new BitBoard(_naughts.GetValue());
                 update.SetBit(s);
                 return new Board(update, _crosses, Player.Crosses, Player.Naughts);
             }
             else
             {
-                var update = _crosses;
+                var update = new BitBoard(_crosses.GetValue());
                 update.SetBit(s);
                 return new Board(_naughts, update, Player.Naughts, Player.Crosses);
             }
@@ -73,6 +80,11 @@ namespace TicTacToe.Core
 
         public List<Square> GetMoves()
         {
+            if (IsFull()) return new List<Square>();
+
+            // Strictly, we shouldn't need the above check, but full board, 
+            // can still return moves; need to check two's compliment without
+            // the above clause; this works.
             var moves = new List<Square>();
             var freeSquares = new BitBoard(~(_naughts.GetValue() | _crosses.GetValue()));
             while (!freeSquares.isEmpty())
@@ -103,6 +115,10 @@ namespace TicTacToe.Core
                 repr += "\n";
             }
             repr += $"player to move = {Player1}\n";
+#if DEBUG
+            repr += $"(debug) naughts = {_naughts.GetValue()}\n";
+            repr += $"(debug) crosses = {_crosses.GetValue()}\n";
+#endif
             return repr;
         }
 

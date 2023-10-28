@@ -32,15 +32,16 @@ namespace TicTacToe.Core
             foreach(var move in moves)
             {
                 var newBoard = boardState.MakeMove(move);
-                var result = NegaMax.search(depth - 1, -beta, -alpha, newBoard);
+                var searchResult = NegaMax.search(depth-1, -beta, -alpha, newBoard);
+                var score = -searchResult.score;
 
-                if (result.score > bestSoFar.score)
+                if (score > bestSoFar.score)
                 {
-                    bestSoFar = result;
+                    bestSoFar = new SearchResult(move,score);
                 }
 
                 // Prune the search tree.
-                alpha = Math.Max(alpha, result.score);
+                alpha = Math.Max(alpha, score);
                 if (alpha > beta)
                     break;
             }
