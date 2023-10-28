@@ -14,15 +14,15 @@ namespace TicTacToe.Core
 
         BitBoard _naughts;
         BitBoard _crosses;
-        Player _player1;
-        Player _player2;
+        public Player Player1 { get; }
+        public Player Player2 { get; }
 
         public Board(BitBoard naughts, BitBoard crosses, Player player1, Player player2)
         {
             _naughts = naughts;
             _crosses = crosses;
-            _player1 = player1;
-            _player2 = player2;
+            Player1 = player1;
+            Player2 = player2;
         }
 
         public Board() : this(new BitBoard(), new BitBoard(), Player.Naughts, Player.Crosses)
@@ -32,7 +32,7 @@ namespace TicTacToe.Core
 
         public Board MakeMove(Square s)
         {
-            if (_player1 == Player.Naughts)
+            if (Player1 == Player.Naughts)
             {
                 var update = _naughts;
                 update.SetBit(s);
@@ -55,7 +55,7 @@ namespace TicTacToe.Core
         }
         public bool IsTerminalState()
         {
-            if ( HasWon(_player1) || HasWon(_player2) ) return true;
+            if ( HasWon(Player1) || HasWon(Player2) ) return true;
             if ( IsFull() ) return true;
             
             return false;
@@ -109,7 +109,7 @@ namespace TicTacToe.Core
                 }
                 repr += "\n";
             }
-            repr += $"player to move = {_player1}\n";
+            repr += $"player to move = {Player1}\n";
             return repr;
         }
 
