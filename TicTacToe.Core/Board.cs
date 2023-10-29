@@ -80,14 +80,10 @@ namespace TicTacToe.Core
 
         public List<Square> GetMoves()
         {
-            if (IsFull()) return new List<Square>();
-
-            // Strictly, we shouldn't need the above check, but full board, 
-            // can still return moves; need to check two's compliment without
-            // the above clause; this works.
             var moves = new List<Square>();
             var freeSquares = new BitBoard(~(_naughts.GetValue() | _crosses.GetValue()));
-            while (!freeSquares.isEmpty())
+
+            while (!freeSquares.IsEmpty())
             {
                 var square = freeSquares.IndexLSB();
                 moves.Add(square);
