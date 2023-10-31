@@ -4,13 +4,17 @@ namespace TicTacToe
 {
     public class Program
     {
-        // If the player to move 'Player1' can move, check if Player2 has 
-        // already won, or if the game is drawn.
-        static bool IsWinOrDraw(Board board)
+        // Player 1 is the player making a move,
+        // When we do MakeMove, Player1 becomes Player2.
+        // Before we search for a next move, we check to
+        // see if the previous move (made by now Player2)
+        // actually won the game.
+        static bool WasLastMoveWinning(Board board)
         {
             if (board.HasWon(board.Player2))
             {
-                Console.WriteLine($"Player {board.Player2} has won!");
+                Console.WriteLine($"{board.Player2} has won!");
+                Console.WriteLine("Winning game state:");
                 return true;
             }
             else if (board.IsFull())
@@ -25,14 +29,34 @@ namespace TicTacToe
 
         static void Main(string[] args)
         {
-            GameLoop();
+            Console.WriteLine("Tic Tac Toe");
+            Console.WriteLine("Press 1. for NegaMax.");
+            Console.WriteLine("Press any other key, for Monte Carlo Search Tree.");
+            char input = Console.ReadKey().KeyChar;
+            if (input == '1')
+            {
+                Console.WriteLine("\nEnter the max depth of NegaMax search (9 for strong play):");
+                uint maxDepth = Convert.ToUInt32(Console.ReadLine());
+                GameLoop("negamax", maxDepth);
+            }
+            else
+            {
+                Console.WriteLine("\nEnter max iterations for Monte Carlo tree search (e.g. 1500 for strong play):");
+                uint numIterations = Convert.ToUInt32(Console.ReadLine());
+                // we could tidy this up, maxDepth is unused for mcts.
+                GameLoop("mcts",9,numIterations);
+            }
         }
 
-        static void GameLoop(int maxDepth = 9)
+        static void GameLoop(string algorithm= "negamax", uint maxDepth = 9, uint numIterations = 1000)
         {
-            Console.WriteLine("Tic Tac Toe");
+            // maxDepth used by negamax, numIterations used by MCTS.
+            Console.WriteLine($"\nAlgorithm: {algorithm}");
             Console.WriteLine("Enter 'exit' to quit.");
-            Console.WriteLine("Enter moves; rank, file format, e.g. 0,2 for C0.");
+            Console.WriteLine("Enter moves; rank, file format, e.g. 0,2 for C0, i.e:");
+            Console.WriteLine("0,0      0,1     0,2");
+            Console.WriteLine("1,0      1,1     1,2");
+            Console.WriteLine("2,0      2,1     2,2");
             Board board = new Board();
             while (true)
             {
@@ -61,29 +85,38 @@ namespace TicTacToe
                     board = board.MakeMove(square);
                     Console.WriteLine(board);
                    
-                    if (IsWinOrDraw(board))
+                    if (WasLastMoveWinning(board))
                     {
                         Console.WriteLine(board);
                         board = new Board();
                         continue;
                     }
-                    Console.WriteLine("Thinking...");
-                    SearchResult result = NegaMax.search(maxDepth, NegaMax.MinSearch, NegaMax.MaxSearch, board);
 
-                    if (result.square != null)
+                    if (algorithm == "negamax")
                     {
-                        board = board.MakeMove(result.square.Value);
+                        SearchResult result = NegaMax.search((int) maxDepth, NegaMax.MinSearch, NegaMax.MaxSearch, board);
+
+                        if (result.square != null)
+                        {
+                            board = board.MakeMove(result.square.Value);
+                        }
+                        else
+                        {
+                            // Could throw, this should never happen as we only call Algorithm to
+                            // find move, if the board isn't in a terminal state.
+                            throw new Exception("NegaMax, could not find move, board in terminal state.");
+                        }
                     }
                     else
                     {
-                        // Could throw, this should never happen as we only call Algorithm to
-                        // find move, if the board isn't in a terminal state.
-                        throw new Exception("Could not find move, board in terminal state.");
+                        // mcts
+                        board = Mcts.Search(board, numIterations);
                     }
          
-                    if (IsWinOrDraw(board))
+                    if (WasLastMoveWinning(board))
                     {
                         Console.WriteLine(board);
+                        Console.WriteLine("\nNew Game, type exit to quit.");
                         board = new Board();
                         continue;
                     }

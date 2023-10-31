@@ -1,7 +1,9 @@
 ﻿
+using System.Net.Sockets;
+
 namespace TicTacToe.Core
 {
-    public class Board
+    public class Board : IEquatable<Board>
     {
         public static UInt16 FULL_BOARD = 511;
 
@@ -21,6 +23,16 @@ namespace TicTacToe.Core
         public Board() : this(new BitBoard(), new BitBoard(), Player.Naughts, Player.Crosses)
         {
 
+        }
+        public bool Equals(Board other)
+        {
+            if (_naughts.GetValue() == other._naughts.GetValue()
+                && _crosses.GetValue() == other._crosses.GetValue()
+                && Player1 == other.Player1 && Player2 == other.Player2)
+            {
+                return true;
+            }
+            return false;
         }
 
         public bool IsSquareEmpty(Square square)
@@ -92,9 +104,29 @@ namespace TicTacToe.Core
             return moves;
         }
 
+        /// <summary>
+        /// Similar to GetMoves, here we return a list of Board where the Board is 
+        /// a new board with the possible move applied to it.
+        /// </summary>
+        /// <returns>the list of possible new states.</returns>
+        public List<Board> GenerateStates()
+        {
+            var states = new List<Board>();
+            var freeSquares = new BitBoard(~(_naughts.GetValue() | _crosses.GetValue()));
+            while (!freeSquares.IsEmpty())
+            {
+                var square = freeSquares.IndexLSB();
+                var state = MakeMove(square);
+                states.Add(state);
+                freeSquares.PopBit(square);
+            }
+
+            return states;
+        }
+
         public override string ToString()
         {
-            string repr = "";
+            string repr = "\nBoard State\n";
             for (var rank = 0; rank < 3; rank++)
             {
                 for (var file = 0; file < 3; file++)
@@ -110,8 +142,9 @@ namespace TicTacToe.Core
                 }
                 repr += "\n";
             }
-            repr += $"player to move = {Player1}\n";
+
 #if DEBUG
+            repr += $"player to move = {Player1}\n";
             repr += $"(debug) naughts = {_naughts.GetValue()}\n";
             repr += $"(debug) crosses = {_crosses.GetValue()}\n";
 #endif

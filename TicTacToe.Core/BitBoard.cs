@@ -3,7 +3,7 @@
 
 namespace TicTacToe.Core
 {
-    public class BitBoard
+    public class BitBoard 
     {
         private uint _value;
 
