@@ -7,13 +7,28 @@ Two options are provided for computer play:
 
 - NegaMax
 - Monte Carlo Tree Search
+  
+  
 
-### Design
+#### ToDo
+
+- Implement test cases.
+
+- Replace console App with GUI.
+  
+  
+
+#### Running
+
+Build the project and set startup to 'TicTacToe.App', this contains the game loop,
+
+with all the logic in the library TicTacToe.Core. 
+
+#### Design
 
 Two BitBoards (unsigned integers) are used to represent the TicTacToe board.
 
 We have a representation of the board:
-
 
 
 
@@ -25,18 +40,23 @@ We have a representation of the board:
 
 Squares are defined by an enum:
 
-    public enum Square
-    {
-        A0 = 0,
-        B0 = 1,
-        C0 = 2,
-        A1 = 3,
-        B1 = 4,
-        C1 = 5,
-        A2 = 6,
-        B2 = 7,
-        C2 = 8
-    }
+
+```cs
+public enum Square
+{
+    A0 = 0,
+    B0 = 1,
+    C0 = 2,
+    A1 = 3,
+    B1 = 4,
+    C1 = 5,
+    A2 = 6,
+    B2 = 7,
+    C2 = 8
+}
+```
+
+
 
 So we can represent all naughts on a BitBoard by setting the appropriate bit:
 
@@ -149,106 +169,108 @@ Negamax:
 
 Monte Carlo Tree Search:
 
-        public static Board Search(Board initial_state, uint numIterations)
+```cs
+    public static Board Search(Board initial_state, uint numIterations)
+    {
+        var root = new Node(initial_state, null);
+
+        for (uint i = 0; i < numIterations; i++)
         {
-            var root = new Node(initial_state, null);
-    
-            for (uint i = 0; i < numIterations; i++)
-            {
-                var node = Select(root);
-                var score = Rollout(node.Board);
-                Backpropagate(node, score);
-            }
-    
-            return GetBestMove(root, 0.0).Board;
+            var node = Select(root);
+            var score = Rollout(node.Board);
+            Backpropagate(node, score);
         }
-    
-        public static Node Select(Node node)
+
+        return GetBestMove(root, 0.0).Board;
+    }
+
+    public static Node Select(Node node)
+    {
+        while (!node.IsTerminal)
         {
-            while (!node.IsTerminal)
+            if (node.IsFullyExpanded)
             {
-                if (node.IsFullyExpanded)
-                {
-                    node = GetBestMove(node, 2.0);
-                }
-                else
-                    return Expand(node);
+                node = GetBestMove(node, 2.0);
             }
-    
-            return node;
+            else
+                return Expand(node);
         }
-    
-        public static Node Expand(Node node)
+
+        return node;
+    }
+
+    public static Node Expand(Node node)
+    {
+        var states = node.Board.GenerateStates();
+        var xs = node.Children.Select(child => child.Board).ToList();
+
+        foreach (var state in states)
         {
-            var states = node.Board.GenerateStates();
-            var xs = node.Children.Select(child => child.Board).ToList();
-    
-            foreach (var state in states)
+            if (!xs.Contains(state))
             {
-                if (!xs.Contains(state))
-                {
-                    Node newNode = new Node(state, node);
-                    node.Children.Add(newNode);
-                    if (states.Count == node.Children.Count)
-                        node.IsFullyExpanded = true;
-                    return newNode;
-                }
-            }
-    
-            throw new Exception("Runtime error, mcts 'Expand' failed.");
-        }
-    
-    
-        public static double Rollout(Board board)
-        {
-            while (!(board.HasWon(Player.Naughts) || board.HasWon(Player.Crosses)))
-            {
-                var possibleStates = board.GenerateStates();
-                if (possibleStates.Count == 0)
-                    break;
-                board = possibleStates[random.Next(possibleStates.Count)];
-            }
-    
-    
-            if (board.HasWon(Player.Crosses))
-                return -1.0;
-    
-            return board.HasWon(Player.Naughts) ? 1.0 : 0.0;
-        }
-    
-        public static void Backpropagate(Node? node, double score)
-        {
-            while (node != null)
-            {
-                node.Visits += 1.0;
-                node.Score += score;
-                node = node.Parent;
+                Node newNode = new Node(state, node);
+                node.Children.Add(newNode);
+                if (states.Count == node.Children.Count)
+                    node.IsFullyExpanded = true;
+                return newNode;
             }
         }
-    
-    
-        public static Node GetBestMove(Node node, double exploration)
+
+        throw new Exception("Runtime error, mcts 'Expand' failed.");
+    }
+
+
+    public static double Rollout(Board board)
+    {
+        while (!(board.HasWon(Player.Naughts) || board.HasWon(Player.Crosses)))
         {
-            var bestSoFar = -1000000.0;
-            var bestMoves = new List<Node>();
-    
-            foreach (var child in node.Children)
-            {
-                double sign = child.Board.Player2 == Player.Naughts ? 1 : -1;
-                var score = sign * child.Score / child.Visits +
-                            exploration * Math.Sqrt(Math.Log(node.Visits / child.Visits));
-    
-                if (score > bestSoFar)
-                {
-                    bestSoFar = score;
-                    bestMoves = new List<Node> { child };
-                }
-                else if (IsEqual(score, bestSoFar))
-                {
-                    bestMoves.Add(child);
-                }
-            }
-    
-            return bestMoves[random.Next(bestMoves.Count)];
-    
+            var possibleStates = board.GenerateStates();
+            if (possibleStates.Count == 0)
+                break;
+            board = possibleStates[random.Next(possibleStates.Count)];
         }
+
+
+        if (board.HasWon(Player.Crosses))
+            return -1.0;
+
+        return board.HasWon(Player.Naughts) ? 1.0 : 0.0;
+    }
+
+    public static void Backpropagate(Node? node, double score)
+    {
+        while (node != null)
+        {
+            node.Visits += 1.0;
+            node.Score += score;
+            node = node.Parent;
+        }
+    }
+
+
+    public static Node GetBestMove(Node node, double exploration)
+    {
+        var bestSoFar = -1000000.0;
+        var bestMoves = new List<Node>();
+
+        foreach (var child in node.Children)
+        {
+            double sign = child.Board.Player2 == Player.Naughts ? 1 : -1;
+            var score = sign * child.Score / child.Visits +
+                        exploration * Math.Sqrt(Math.Log(node.Visits / child.Visits));
+
+            if (score > bestSoFar)
+            {
+                bestSoFar = score;
+                bestMoves = new List<Node> { child };
+            }
+            else if (IsEqual(score, bestSoFar))
+            {
+                bestMoves.Add(child);
+            }
+        }
+
+        return bestMoves[random.Next(bestMoves.Count)];
+
+    }
+```
